@@ -1,0 +1,56 @@
+import time
+import random
+from luma.oled.device import ssd1306
+from luma.core.interface.serial import i2c
+from luma.core.render import canvas
+from luma.core.multiplexer import TCA9548A
+
+# 1. Setup the Multiplexer
+# This creates a virtual list of 'devices' mapped to the TCA channels
+serial = i2c(port=1, address=0x70)
+multiplexer = TCA9548A(serial)
+
+# We have 5 screens on channels 0, 1, 2, 3, and 4
+screens = []
+for channel in range(5):
+    device = ssd1306(multiplexer.get_device(channel), width=128, height=32)
+    screens.append(device)
+
+# 2. Bubble Physics Logic
+class Bubble:
+    def __init__(self):
+        self.reset()
+
+    def reset(self):
+        self.x = random.randint(0, 128)
+        self.y = 40  # Start just below the screen
+        self.size = random.randint(2, 5)
+        self.speed = random.uniform(1.0, 3.5)
+
+    def move(self):
+        self.y -= self.speed
+        # Add a little "wobble"
+        self.x += random.uniform(-1, 1)
+        if self.y < -10:
+            self.reset()
+
+# Initialize bubbles for each screen
+all_bubbles = [[Bubble() for _ in range(6)] for _ in range(5)]
+
+print("Starting Bubble Animation on 5 screens... Press Ctrl+C to stop.")
+
+# 3. The Main Loop
+try:
+    while True:
+        for i, device in enumerate(screens):
+            with canvas(device) as draw:
+                for bubble in all_bubbles[i]:
+                    bubble.move()
+                    # Draw the bubble (outline and a little highlight)
+                    draw.ellipse((bubble.x, bubble.y, bubble.x + bubble.size, bubble.y + bubble.size), outline="white")
+                    draw.point((bubble.x + 1, bubble.y + 1), fill="white")
+        
+        time.sleep(0.02) # Control the frame rate
+
+except KeyboardInterrupt:
+    print("Animation stopped.")
