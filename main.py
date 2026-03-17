@@ -51,5 +51,16 @@ def main():
     except KeyboardInterrupt:
         print("Shutting down...")
 
+
 if __name__ == "__main__":
-    main()
+    try:
+        main()
+    except KeyboardInterrupt:
+        print("Stopping Game...")
+        # Tell the Mux to disconnect all channels on exit
+        bus = SMBus(1)
+        bus.write_byte(0x70, 0) 
+    except Exception as e:
+        print(f"Crash: {e}")
+        bus = SMBus(1)
+        bus.write_byte(0x70, 0)
