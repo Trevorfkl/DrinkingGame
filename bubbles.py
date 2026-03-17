@@ -53,11 +53,11 @@ def run(mux, screens):
                     
                     # Wavy top line (Simpler math for Lite OS)
                     slosh = int(math.sin(time.time() * 5 + i) * 5)
-                    
+                    safe_fill = max(0, fill_w + slosh)
                     if ORIENTATION == 1:
-                        draw.rectangle((0, 0, fill_w + slosh, 32), fill="white")
+                        draw.rectangle((0, 0, safe_fill, 32), fill="white")
                     else:
-                        draw.rectangle((128 - (fill_w + slosh), 0, 128, 32), fill="white")
+                        draw.rectangle((128 - safe_fill, 0, 128, 32), fill="white")
 
                     # Draw Bubbles
                     for b in bubbles:
