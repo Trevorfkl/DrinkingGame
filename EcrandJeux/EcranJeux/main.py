@@ -5,9 +5,12 @@ from PySide6.QtGui import QGuiApplication
 from PySide6.QtQml import QQmlApplicationEngine
 from PySide6.QtCore import QObject, Slot, QThread
 
-PROJECT_PATH = "D:/DrinkingGame/EcrandJeux/EcranJeux"
-os.environ["QML2_IMPORT_PATH"] = PROJECT_PATH
+# 1. On importe le fichier de ressources que tu viens de compiler
+import rc_EcranJeux
 
+# 2. On rend le chemin dynamique (trouve le dossier actuel du fichier main.py)
+PROJECT_PATH = os.path.dirname(os.path.abspath(__file__))
+os.environ["QML2_IMPORT_PATH"] = PROJECT_PATH
 # ==========================================
 # 1. GESTION DU MATÉRIEL (Bouclier PC/Raspberry Pi)
 # ==========================================
