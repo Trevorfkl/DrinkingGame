@@ -12,8 +12,8 @@ qt6_add_qml_module(EcranJeuxContent
         "App.qml"
         "FICHIERTEMPLATE.ui.qml"
         "FondBiere.ui.qml"
-        "Main.qml"
-        "MainMenu.ui.qml"
+        "MainMenu.qml"
+        "MainMenuForm.ui.qml"
         "SplashScreen.ui.qml"
     RESOURCES
         "fonts/DrunkHandwriting-35q6.ttf"

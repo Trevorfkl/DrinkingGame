@@ -30,7 +30,7 @@ Rectangle {
             id: text1
             y: 680
             color: "#ffffff"
-            text: qsTr("Un petit jeu cree par un buveur pour des buveurs!")
+            text: qsTr("Meeeuuuuuhh")
             font.pixelSize: 11
             anchors.horizontalCenter: parent.horizontalCenter
             font.family: "Drunk Handwriting"
