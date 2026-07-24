@@ -1,0 +1,19 @@
+<RCC>
+    <qresource>
+        <file>EcranJeux.qmlproject</file>
+        <file>EcranJeux/Constants.qml</file>
+        <file>EcranJeux/EventListModel.qml</file>
+        <file>EcranJeux/EventListSimulator.qml</file>
+        <file>EcranJeux/qmldir</file>
+        <file>EcranJeuxContent/App.qml</file>
+        <file>EcranJeuxContent/FICHIERTEMPLATE.ui.qml</file>
+        <file>EcranJeuxContent/FondBiere.ui.qml</file>
+        <file>EcranJeuxContent/fonts/DrunkHandwriting-35q6.ttf</file>
+        <file>EcranJeuxContent/fonts/TheDrunkedManSt-ZXrJ.ttf</file>
+        <file>EcranJeuxContent/MainMenu.qml</file>
+        <file>EcranJeuxContent/MainMenuForm.ui.qml</file>
+        <file>EcranJeuxContent/SplashScreen.ui.qml</file>
+        <file>qtquickcontrols2.conf</file>
+        <file>sauvegarde.json</file>
+    </qresource>
+</RCC>
