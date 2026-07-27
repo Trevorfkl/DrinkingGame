@@ -26,6 +26,11 @@ Rectangle {
         height: 700
         clip: false
 
+        FontLoader {
+        id: policeMenu
+        source: "assets/fonts/DrunkHandwriting.ttf" // Mets le vrai nom de ton fichier ici
+        }
+
         Text {
             id: text1
             y: 680
@@ -33,7 +38,10 @@ Rectangle {
             text: qsTr("Meeeuuuuuhh")
             font.pixelSize: 11
             anchors.horizontalCenter: parent.horizontalCenter
-            font.family: "Drunk Handwriting"
+            
+            // 🚀 LA CORRECTION EST ICI : On ajoute .name
+            font.family: policeMenu.name 
+            
             font.bold: true
         }
 
@@ -47,6 +55,14 @@ Rectangle {
             from: 0
             to: 100
             value: 0
+
+            onValueChanged: {
+                // S'assure que le backend est bien connecté pour éviter les crashs au démarrage
+                if (typeof backend_python !== "undefined") {
+                    // Math.round() transforme 45.67% en 46 pour ton script Python
+                    backend_python.majProgressionChargement(Math.round(progressBar.value))
+                }
+            }
 
             indeterminate: false
             anchors.horizontalCenterOffset: 0

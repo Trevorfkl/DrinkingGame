@@ -1,6 +1,7 @@
 import QtQuick
 import QtQuick.Controls
 import EcranJeux
+import QtMultimedia
 
 Window {
     id: window
@@ -11,6 +12,20 @@ Window {
     title: "EcranJeux"
     color: "black"
 
+    MediaPlayer{
+        id: musiqueDemarrage
+        source: "assets/sounds/startup.mp3"
+        audioOutput: AudioOutput{
+            volume: 0.8 // Le volume va de 0.0 (muet) à 1.0 (maximum)
+        }
+    }
+
+    // 🚀 3. LANCER LA MUSIQUE AU DÉMARRAGE DE L'APPLICATION
+    Component.onCompleted: {
+        musiqueDemarrage.play()
+    }
+        
+    
     // --- LE CONTENEUR MAGIQUE QUI TOURNE LE JEU ---
     Item {
         width: 800  // Le format vertical de ton jeu

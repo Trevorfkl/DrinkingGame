@@ -255,7 +255,7 @@ Item {
                 visible: !zoneBoutons.centreOccupe
 
                 TextField {
-                    id: champNom // (Celui-ci était probablement déjà bon)
+                    id: champNom
                     width: 300
                     height: 50
                     placeholderText: "Entrez votre nom..."
@@ -270,23 +270,38 @@ Item {
                     }
                 }
 
-                // 1. AJOUTE L'ID ICI POUR LE BOUTON CRÉER
-                Rectangle {
+                // Le bouton fusionné qui utilise le style de ton ancien btnCreer
+                Button {
                     id: btnCreer
                     width: 300
                     height: 50
-                    radius: 25
-                    color: "#4d2e00"
-                    Text {
+                    
+                    background: Rectangle {
+                        radius: 25
+                        color: "#4d2e00"
+                    }
+                    
+                    contentItem: Text {
                         text: "AJOUTER"
                         color: "white"
                         font.bold: true
-                        anchors.centerIn: parent
+                        horizontalAlignment: Text.AlignHCenter
+                        verticalAlignment: Text.AlignVCenter
+                    }
+
+                    onClicked: {
+                        if (champNom.text !== "") {
+                            // On appelle le script Python (Emplacement 1, Nom tapé)
+                            backend_python.nouveau_joueur_ajoute(1, champNom.text)
+                            
+                            // On vide le champ après l'envoi
+                            champNom.text = ""
+                        }
                     }
                 }
             }
 
-            // 2. AJOUTE L'ID ICI POUR LE BOUTON SÉLECTIONNER
+            // LE BOUTON SÉLECTIONNER
             Rectangle {
                 id: btnSelectionner
                 width: 300
@@ -297,6 +312,7 @@ Item {
                 anchors.topMargin: 20
                 anchors.horizontalCenter: parent.horizontalCenter
                 visible: zoneBoutons.centreOccupe
+                
                 Text {
                     text: "SÉLECTIONNER"
                     color: "white"

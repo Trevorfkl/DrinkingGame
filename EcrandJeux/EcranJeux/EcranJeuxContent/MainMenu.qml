@@ -14,6 +14,7 @@ MainMenuForm {
     // AJOUT 1 : Détecter quand le carrousel tourne
     // ========================================================
     onIndexCarrouselChanged: {
+        console.log("🔄 [QML] Le carrousel tourne (Index actuel: " + interfaceVisuelle.indexCarrousel + ")")
         // On ramène le menu à la base (ferme les options)
         interfaceVisuelle.etatPanneau = "base"
 
@@ -33,12 +34,13 @@ MainMenuForm {
 
             if (interfaceVisuelle.carrouselModel.count > 0) {
                 let nomActuel = interfaceVisuelle.carrouselModel.get(interfaceVisuelle.indexCarrousel).playerName
+                console.log("🖱️ [QML] Clic sur SÉLECTIONNER pour le joueur : " + nomActuel)
                 backend_python.joueurSelectionne(nomActuel)
             }
         }
     }
 
-    // 2. Clic sur "AJOUTER" (Anciennement CRÉER)
+   // 2. Clic sur "AJOUTER" (Anciennement CRÉER)
         MouseArea {
             parent: interfaceVisuelle.clicCreer
             anchors.fill: parent
@@ -46,20 +48,22 @@ MainMenuForm {
                 let nomEntre = interfaceVisuelle.texteChampNom
 
                 if(nomEntre !== "") {
-                    // 1. On demande à Python les stats (ça nous revient sous forme de texte JSON)
-                    let reponseTexte = backend_python.chargerOuCreerJoueur(nomEntre)
+                    let indexActuel = interfaceVisuelle.indexCarrousel
+                    console.log("🖱️ [QML] Clic sur AJOUTER pour '" + nomEntre + "' à l'emplacement " + (indexActuel + 1))
 
-                    // 2. On transforme le texte JSON en vrai objet utilisable
+                    // 1. On demande à Python les stats
+                    let reponseTexte = backend_python.chargerOuCreerJoueur(nomEntre)
                     let stats = JSON.parse(reponseTexte)
 
-                    // 3. On met à jour la carte visuelle avec les VRAIES stats !
-                    let indexActuel = interfaceVisuelle.indexCarrousel
+                    // 3. On met à jour la carte visuelle
                     interfaceVisuelle.carrouselModel.setProperty(indexActuel, "hasPlayer", true)
                     interfaceVisuelle.carrouselModel.setProperty(indexActuel, "playerName", nomEntre)
                     interfaceVisuelle.carrouselModel.setProperty(indexActuel, "coins", stats.coins)
                     interfaceVisuelle.carrouselModel.setProperty(indexActuel, "gorgees", stats.gorgees)
 
-                    // 4. On indique que la place est prise et on passe aux options
+                    // 🚀 LA CONNEXION AVEC LES ÉCRANS OLED
+                    backend_python.nouveau_joueur_ajoute(indexActuel + 1, nomEntre)
+
                     interfaceVisuelle.placeActuelleOccupee = true
                     interfaceVisuelle.etatPanneau = "modifier"
                 }
@@ -71,6 +75,7 @@ MainMenuForm {
         parent: interfaceVisuelle.clicModifier
         anchors.fill: parent
         onClicked: {
+            console.log("🖱️ [QML] Clic sur MODIFIER")
             interfaceVisuelle.etatPanneau = "modifier"
         }
     }
@@ -89,127 +94,164 @@ MainMenuForm {
             parent: interfaceVisuelle.clicEnregistrer
             anchors.fill: parent
             onClicked: {
-                // CORRECTION DE L'ERREUR : On va chercher les vraies informations de la carte actuelle
                 let indexActuel = interfaceVisuelle.indexCarrousel
                 let vraiNom = interfaceVisuelle.carrouselModel.get(indexActuel).playerName
                 let vraiesCoins = interfaceVisuelle.carrouselModel.get(indexActuel).coins
                 let vraiesGorgees = interfaceVisuelle.carrouselModel.get(indexActuel).gorgees
 
-                console.log("Sauvegarde demandée pour " + vraiNom)
-
-                // On envoie les vraies variables à Python
+                console.log("🖱️ [QML] Clic sur ENREGISTRER. Sauvegarde demandée pour " + vraiNom)
                 backend_python.enregistrerStats(vraiNom, vraiesCoins, vraiesGorgees)
-
-                // On retourne au menu précédent
                 interfaceVisuelle.etatPanneau = "options"
             }
         }
 
     // 6. Clic sur "Pu Capable 🤮" (Céder sa place)
         MouseArea {
-            parent: interfaceVisuelle.clicPoubelle // Vérifie que c'est bien le bon ID pour ton bouton
+            parent: interfaceVisuelle.clicPoubelle
             anchors.fill: parent
             onClicked: {
                 let indexActuel = interfaceVisuelle.indexCarrousel
                 let vraiNom = interfaceVisuelle.carrouselModel.get(indexActuel).playerName
+                
+                console.log("🗑️ [QML] Clic sur POUBELLE. Éjection du joueur : " + vraiNom)
 
-                // 1. On avertit Python
                 backend_python.joueurCedePlace(vraiNom)
 
-                // 2. On vide complètement la carte actuelle
                 interfaceVisuelle.carrouselModel.setProperty(indexActuel, "hasPlayer", false)
                 interfaceVisuelle.carrouselModel.setProperty(indexActuel, "playerName", "")
                 interfaceVisuelle.carrouselModel.setProperty(indexActuel, "coins", 0)
                 interfaceVisuelle.carrouselModel.setProperty(indexActuel, "gorgees", 0)
 
-                // 3. On remet l'interrupteur à "vide" et on retourne au menu de base
                 interfaceVisuelle.placeActuelleOccupee = false
                 interfaceVisuelle.etatPanneau = "base"
             }
         }
+
     // ==========================================
-        // BOUTON "AJOUTER UNE PLACE" (Max 5)
-        // ==========================================
-        Rectangle {
-            id: btnAjouterPlace
-            width: 250
-            height: 50
-            radius: 25
-            color: "#2ecc71" // Un beau vert
+    // BOUTON "AJOUTER UNE PLACE" (Max 5)
+    // ==========================================
+    Rectangle {
+        id: btnAjouterPlace
+        width: texteBouton.contentWidth + 50
+        height: 50
+        radius: 25
+        color: "#2ecc71" // Un beau vert
 
-            // On le place en bas, au centre
-            anchors.bottom: parent.bottom
-            anchors.bottomMargin: 30
-            anchors.horizontalCenter: parent.horizontalCenter
+        anchors.bottom: parent.bottom
+        anchors.bottomMargin: 30
+        anchors.horizontalCenter: parent.horizontalCenter
 
-            // Le bouton DISPARAÎT si on a 5 places ou plus !
-            visible: interfaceVisuelle.carrouselModel.count < 5
+        visible: interfaceVisuelle.carrouselModel.count < 5
 
-            Text {
-                text: "➕ Ajouter une place (" + interfaceVisuelle.carrouselModel.count + "/5)"
-                color: "white"
-                font.bold: true
-                font.pixelSize: 18
-                anchors.centerIn: parent
-            }
+        Text {
+            id: texteBouton
+            text: "➕ Ajouter une place (" + interfaceVisuelle.carrouselModel.count + "/5)"
+            color: "white"
+            font.bold: true
+            font.pixelSize: 18
+            anchors.centerIn: parent
+        }
 
-            MouseArea {
-                anchors.fill: parent
-                onClicked: {
-                    if (interfaceVisuelle.carrouselModel.count < 5) {
-                        // On ajoute une carte vide au carrousel
-                        interfaceVisuelle.carrouselModel.append({
-                            "hasPlayer": false,
-                            "playerName": "",
-                            "coins": 0,
-                            "gorgees": 0
-                        })
-
-                        // On fait défiler le carrousel jusqu'à cette nouvelle place
-                        interfaceVisuelle.indexCarrousel = interfaceVisuelle.carrouselModel.count - 1
-                    }
+        MouseArea {
+            anchors.fill: parent
+            onClicked: {
+                if (interfaceVisuelle.carrouselModel.count < 5) {
+                    interfaceVisuelle.carrouselModel.append({
+                        "hasPlayer": false,
+                        "playerName": "",
+                        "coins": 0,
+                        "gorgees": 0
+                    })
+                    interfaceVisuelle.indexCarrousel = interfaceVisuelle.carrouselModel.count - 1
                 }
             }
         }
-        // ==========================================
-            // BOUTON "X ROUGE" (Supprimer l'emplacement vide)
-            // ==========================================
-            Rectangle {
-                id: btnSupprimerPlace
-                width: 40
-                height: 40
-                radius: 20 // Pour faire un cercle parfait
-                color: "#e74c3c" // Un beau rouge
+    }
 
-                // On le place en haut à droite
-                anchors.top: parent.top
-                anchors.topMargin: 20
-                anchors.right: parent.right
-                anchors.rightMargin: 20
+    // ==========================================
+    // NOUVEAU BOUTON : "DÉMARRER LA PARTIE"
+    // ==========================================
+    Rectangle {
+        id: btnDemarrerJeu
+        z: 100
+        width: 320
+        height: 60
+        radius: 30
+        color: "#f39c12" // Orange doré
 
-                // VISIBLE SEULEMENT SI : On est dans le menu de base + la place est vide + il y a plus d'une carte
-                visible: interfaceVisuelle.etatPanneau === "base" && !interfaceVisuelle.placeActuelleOccupee && interfaceVisuelle.carrouselModel.count > 1
+        // On l'ancre JUSTE AU-DESSUS du bouton Ajouter
+        anchors.bottom: btnAjouterPlace.top
+        anchors.bottomMargin: 15
+        anchors.horizontalCenter: parent.horizontalCenter
 
-                Text {
-                    text: "✖"
-                    color: "white"
-                    font.bold: true
-                    font.pixelSize: 20
-                    anchors.centerIn: parent
-                }
+        // Visible uniquement dans le menu de base, et seulement s'il y a au moins 1 joueur actif !
+        visible: interfaceVisuelle.etatPanneau === "base" 
 
-                MouseArea {
-                    anchors.fill: parent
-                    onClicked: {
-                        if (interfaceVisuelle.carrouselModel.count > 1) {
-                            // On supprime la carte actuelle du carrousel
-                            interfaceVisuelle.carrouselModel.remove(interfaceVisuelle.indexCarrousel)
+        Text {
+            text: "🎮 DÉMARRER LA PARTIE"
+            color: "white"
+            font.bold: true
+            font.pixelSize: 20
+            anchors.centerIn: parent
+        }
 
-                            // On met à jour l'interrupteur avec la nouvelle carte qui prend sa place
-                            let occupe = interfaceVisuelle.carrouselModel.get(interfaceVisuelle.indexCarrousel).hasPlayer
-                            interfaceVisuelle.placeActuelleOccupee = occupe
-                        }
-                    }
+        MouseArea {
+            anchors.fill: parent
+            onClicked: {
+                console.log("🍻 [QML] Clic sur Démarrer. Passage au Lobby.")
+                // On passe le modèle des joueurs à la nouvelle page pour générer les sliders !
+                stackView.push("ParametresPartie.qml", { "modeleJoueurs": interfaceVisuelle.carrouselModel })
+            }
+        }
+    }
+
+    // ==========================================
+    // BOUTON "X ROUGE" (Supprimer l'emplacement vide)
+    // ==========================================
+    Rectangle {
+        id: btnSupprimerPlace
+        width: 40
+        height: 40
+        radius: 20
+        color: "#e74c3c"
+
+        anchors.top: parent.top
+        anchors.topMargin: 20
+        anchors.right: parent.right
+        anchors.rightMargin: 20
+
+        visible: interfaceVisuelle.etatPanneau === "base" && !interfaceVisuelle.placeActuelleOccupee && interfaceVisuelle.carrouselModel.count > 1
+
+        Text {
+            text: "✖"
+            color: "white"
+            font.bold: true
+            font.pixelSize: 20
+            anchors.centerIn: parent
+        }
+
+        MouseArea {
+            anchors.fill: parent
+            onClicked: {
+                if (interfaceVisuelle.carrouselModel.count > 1) {
+                    interfaceVisuelle.carrouselModel.remove(interfaceVisuelle.indexCarrousel)
+                    let occupe = interfaceVisuelle.carrouselModel.get(interfaceVisuelle.indexCarrousel).hasPlayer
+                    interfaceVisuelle.placeActuelleOccupee = occupe
                 }
             }
+        }
+    }
+
+    // ==========================================
+    // INITIALISATION
+    // ==========================================
+    Component.onCompleted: {
+        console.log("🚀 [QML] Démarrage... Synchronisation des joueurs par défaut avec les OLED.")
+        for (let i = 0; i < interfaceVisuelle.carrouselModel.count; i++) {
+            let place = interfaceVisuelle.carrouselModel.get(i)
+            if (place.hasPlayer && place.playerName !== "") {
+                backend_python.nouveau_joueur_ajoute(i + 1, place.playerName)
+            }
+        }
+    }
 }
